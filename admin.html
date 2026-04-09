@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – SIGCE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #f5f3ef;
+      --surface: #ffffff;
+      --border:  #e2ddd6;
+      --ink:     #1a1714;
+      --muted:   #7a7269;
+      --accent:  #c0392b;
+      --gold:    #b5892a;
+      --green:   #1a7a4a;
+      --radius:  10px;
+      --shadow:  0 2px 14px rgba(0,0,0,.07);
+      --font-h:  'Playfair Display', serif;
+      --font-b:  'DM Sans', sans-serif;
+    }
+    body { font-family: var(--font-b); background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; }
+    @keyframes popIn { from{transform:scale(.95);opacity:0} to{transform:scale(1);opacity:1} }
+
+    /* ── Sidebar ── */
+    #adm-sidebar {
+      width: 220px; min-height: 100vh; background: var(--ink);
+      display: flex; flex-direction: column; padding: 1.5rem 1rem;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+    }
+    .adm-brand { display: flex; align-items: center; gap: .7rem; padding-bottom: 1.3rem; border-bottom: 1px solid #262626; margin-bottom: 1.2rem; }
+    .adm-crest { width: 36px; height: 36px; border: 1.5px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .adm-brand-text { font-family: var(--font-h); color: #fff; font-size: .9rem; line-height: 1.2; }
+    .adm-brand-sub  { font-size: .65rem; color: #555; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
+    .nav-label { font-size: .63rem; text-transform: uppercase; letter-spacing: .14em; color: #444; margin: 1.1rem 0 .45rem .3rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: .5rem; padding: .52rem .75rem;
+      border-radius: 8px; color: #888; font-size: .84rem; cursor: pointer;
+      transition: background .15s, color .15s; margin-bottom: 2px; user-select: none;
+    }
+    .nav-item:hover { background: #1e1e1e; color: #ddd; }
+    .nav-item.active { background: var(--gold); color: #fff; font-weight: 500; }
+    .ni-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .5; flex-shrink: 0; }
+    .nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: .62rem; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+    .adm-sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid #262626; }
+    .adm-user-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+    .adm-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: .75rem; color: var(--gold); font-weight: 500; }
+    .adm-user-name { font-size: .82rem; color: #ccc; }
+    .adm-user-role { font-size: .67rem; color: #555; }
+    .btn-logout {
+      width: 100%; padding: .5rem; border: 1px solid #2a2a2a; border-radius: 8px;
+      background: transparent; color: #666; font-family: var(--font-b); font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-logout:hover { background: #1e1e1e; color: #aaa; }
+
+    /* ── Main ── */
+    #adm-main { margin-left: 220px; flex: 1; padding: 2rem 2.2rem; min-height: 100vh; }
+    .adm-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .adm-page-title { font-family: var(--font-h); font-size: 1.7rem; }
+    .adm-page-sub   { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+    .adm-stats { display: flex; gap: .8rem; flex-wrap: wrap; }
+    .adm-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .6rem 1.1rem; text-align: center; min-width: 80px; }
+    .adm-stat-num { font-size: 1.3rem; font-weight: 500; font-family: var(--font-h); }
+    .adm-stat-lbl { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .adm-stat.pending  .adm-stat-num { color: #c07a00; }
+    .adm-stat.approved .adm-stat-num { color: var(--green); }
+    .adm-stat.rejected .adm-stat-num { color: var(--accent); }
+
+    /* ── Panels ── */
+    .adm-panel { display: none; }
+    .adm-panel.active { display: block; }
+
+    /* ── Year accordion ── */
+    .year-block { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 1.2rem; overflow: hidden; }
+    .year-block-header { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.4rem; cursor: pointer; user-select: none; transition: background .15s; }
+    .year-block-header:hover { background: #faf9f7; }
+    .year-block-title { display: flex; align-items: center; gap: .7rem; }
+    .year-tag { font-size: .7rem; font-weight: 500; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .07em; }
+    .year-tag.sy { background: #e8f4fd; color: #1a5e9a; }
+    .year-tag.ty { background: #eaf3de; color: #3b6d11; }
+    .year-tag.fy { background: #faeeda; color: #854f0b; }
+    .year-block-name { font-family: var(--font-h); font-size: 1.05rem; }
+    .year-chevron { width: 18px; height: 18px; transition: transform .25s; color: var(--muted); }
+    .year-block.open .year-chevron { transform: rotate(180deg); }
+    .year-block-body { display: none; padding: 0 1.4rem 1.2rem; border-top: 1px solid var(--border); }
+    .year-block.open .year-block-body { display: block; }
+
+    /* ── Sub tabs ── */
+    .sub-tab-row { display: flex; gap: .45rem; padding: 1rem 0 .9rem; flex-wrap: wrap; }
+    .sub-tab { padding: .4rem 1rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); font-family: var(--font-b); font-size: .78rem; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .sub-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+
+    /* ── Material table ── */
+    .material-table { width: 100%; border-collapse: collapse; }
+    .material-table th { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 500; padding: .5rem .8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .material-table td { padding: .7rem .8rem; font-size: .85rem; border-bottom: 1px solid #f0ede8; vertical-align: middle; }
+    .material-table tr:last-child td { border-bottom: none; }
+    .material-table tr:hover td { background: #faf9f7; }
+    .file-title-cell { font-weight: 500; }
+    .file-meta-cell  { color: var(--muted); font-size: .78rem; }
+
+    .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 500; }
+    .status-pill.pending  { background: #fff3cd; color: #856404; }
+    .status-pill.approved { background: #d1e7dd; color: #0a3622; }
+    .status-pill.rejected { background: #f8d7da; color: #842029; }
+
+    .action-btns { display: flex; gap: .4rem; align-items: center; }
+    .btn-approve, .btn-reject {
+      width: 30px; height: 30px; border-radius: 50%; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform .15s, opacity .2s; flex-shrink: 0;
+    }
+    .btn-approve { background: #d1e7dd; }
+    .btn-approve:hover { background: #badbcc; transform: scale(1.1); }
+    .btn-reject  { background: #f8d7da; }
+    .btn-reject:hover  { background: #f5c2c7; transform: scale(1.1); }
+    .btn-approve:disabled, .btn-reject:disabled { opacity: .35; cursor: default; transform: none; }
+    .empty-row td { text-align: center; color: var(--muted); font-size: .82rem; padding: 1.5rem; }
+
+    /* ── Log panel ── */
+    .log-filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+    .log-filter-btn { padding: .38rem .9rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-family: var(--font-b); font-size: .78rem; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .log-filter-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .log-list { display: flex; flex-direction: column; gap: .7rem; }
+    .log-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: flex-start; gap: 1rem; }
+    .log-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .log-icon.approved { background: #d1e7dd; }
+    .log-icon.rejected { background: #f8d7da; }
+    .log-body { flex: 1; }
+    .log-title { font-weight: 500; font-size: .88rem; margin-bottom: 3px; }
+    .log-meta  { font-size: .75rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .5rem; }
+    .log-meta span::before { content: '·'; margin-right: .5rem; }
+    .log-meta span:first-child::before { content: ''; margin-right: 0; }
+    .log-right { text-align: right; flex-shrink: 0; }
+    .log-time  { font-size: .7rem; color: var(--muted); margin-bottom: .3rem; }
+    .btn-undo {
+      background: transparent; border: 1px solid var(--border); border-radius: 8px;
+      padding: .32rem .75rem; font-family: var(--font-b); font-size: .75rem;
+      color: var(--muted); cursor: pointer; transition: all .18s; white-space: nowrap;
+    }
+    .btn-undo:hover { background: var(--bg); color: var(--ink); border-color: #bbb; }
+    .log-card.undone { opacity: .45; pointer-events: none; }
+
+    /* ── Undo Toast ── */
+    #undo-toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1a1714; color: #fff; border-radius: 12px; padding: .75rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem; font-size: .85rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25); z-index: 9999;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0; min-width: 320px; pointer-events: none;
+    }
+    #undo-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: all; }
+    .toast-msg { flex: 1; }
+    .toast-msg strong { display: block; font-weight: 500; margin-bottom: 1px; }
+    .toast-msg small { color: #888; font-size: .75rem; }
+    .toast-undo-btn {
+      background: #fff; color: #1a1714; border: none; border-radius: 8px;
+      padding: .4rem .9rem; font-family: var(--font-b); font-size: .82rem; font-weight: 500;
+      cursor: pointer; flex-shrink: 0; transition: opacity .15s;
+    }
+    .toast-undo-btn:hover { opacity: .85; }
+    .toast-timer { width: 28px; height: 28px; flex-shrink: 0; }
+
+    /* ── Upload modal (admin can add files) ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border-radius: 16px; padding: 2rem; width: min(440px, 94vw); box-shadow: 0 8px 40px rgba(0,0,0,.18); animation: popIn .2s ease; }
+    .modal-box h3 { font-family: var(--font-h); font-size: 1.3rem; margin-bottom: .25rem; }
+    .modal-sub { font-size: .8rem; color: var(--muted); margin-bottom: 1.4rem; }
+    .adm-form-group { margin-bottom: 1rem; }
+    .adm-form-group label { display: block; font-size: .72rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+    .adm-form-group input, .adm-form-group select {
+      width: 100%; padding: .65rem .9rem; border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: var(--font-b); font-size: .88rem; background: var(--bg); color: var(--ink); outline: none; transition: border .2s;
+    }
+    .adm-form-group input:focus, .adm-form-group select:focus { border-color: var(--gold); }
+    .modal-actions { display: flex; gap: .7rem; justify-content: flex-end; margin-top: 1.4rem; }
+    .btn-cancel { padding: .6rem 1.2rem; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; font-family: var(--font-b); font-size: .86rem; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .btn-cancel:hover { background: var(--bg); color: var(--ink); }
+    .btn-submit { padding: .6rem 1.4rem; border: none; border-radius: var(--radius); background: var(--ink); color: #fff; font-family: var(--font-b); font-size: .86rem; font-weight: 500; cursor: pointer; transition: background .2s; }
+    .btn-submit:hover { background: #333; }
+    .btn-add-file {
+      display: inline-flex; align-items: center; gap: .5rem; padding: .5rem 1.1rem;
+      background: var(--ink); color: #fff; border: none; border-radius: 8px;
+      font-family: var(--font-b); font-size: .82rem; cursor: pointer; transition: background .2s;
+    }
+    .btn-add-file:hover { background: #333; }
+
+    @media (max-width: 700px) {
+      #adm-sidebar { width: 180px; }
+      #adm-main { margin-left: 180px; padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<aside id="adm-sidebar">
+  <div class="adm-brand">
+    <div class="adm-crest">
+      <svg width="18" height="18" viewBox="0 0 36 36" fill="none">
+        <polygon points="18,4 32,12 32,24 18,32 4,24 4,12" stroke="#b5892a" stroke-width="1.6" fill="none"/>
+        <circle cx="18" cy="18" r="5" stroke="#b5892a" stroke-width="1.4" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <div class="adm-brand-text">SIGCE</div>
+      <div class="adm-brand-sub">Admin Panel</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-label">Materials</div>
+    <div class="nav-item active" id="nav-materials" onclick="showPanel('materials')">
+      <span class="ni-dot"></span> All Materials
+    </div>
+    <div class="nav-label">Review</div>
+    <div class="nav-item" id="nav-pending" onclick="showPanel('pending')">
+      <span class="ni-dot"></span> Pending
+      <span class="nav-badge" id="nb-pending" style="display:none">0</span>
+    </div>
+    <div class="nav-label">Records</div>
+    <div class="nav-item" id="nav-log" onclick="showPanel('log')">
+      <span class="ni-dot"></span> Approval Log
+    </div>
+  </nav>
+
+  <div class="adm-sidebar-footer">
+    <div class="adm-user-row">
+      <div class="adm-avatar">DM</div>
+      <div>
+        <div class="adm-user-name">Dr. Mehta</div>
+        <div class="adm-user-role">Administrator</div>
+      </div>
+    </div>
+    <!-- ✅ Logout now clears session before redirecting -->
+    <button class="btn-logout" onclick="adminLogout()">← Back to Portal</button>
+  </div>
+</aside>
+
+<main id="adm-main">
+
+  <div class="adm-topbar">
+    <div>
+      <div class="adm-page-title" id="adm-page-title">All Materials</div>
+      <div class="adm-page-sub" id="adm-page-sub">Review and manage uploaded content by year</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div class="adm-stats">
+        <div class="adm-stat pending">
+          <div class="adm-stat-num" id="stat-pending">0</div>
+          <div class="adm-stat-lbl">Pending</div>
+        </div>
+        <div class="adm-stat approved">
+          <div class="adm-stat-num" id="stat-approved">0</div>
+          <div class="adm-stat-lbl">Approved</div>
+        </div>
+        <div class="adm-stat rejected">
+          <div class="adm-stat-num" id="stat-rejected">0</div>
+          <div class="adm-stat-lbl">Rejected</div>
+        </div>
+      </div>
+      <button class="btn-add-file" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M7 2v10M2 7h10"/></svg>
+        Add File
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel: All Materials -->
+  <div class="adm-panel active" id="panel-materials">
+
+    <!-- Second Year -->
+    <div class="year-block open" id="yb-sy">
+      <div class="year-block-header" onclick="toggleYear('sy')">
+        <div class="year-block-title">
+          <span class="year-tag sy">2nd</span>
+          <span class="year-block-name">Second Year</span>
+        </div>
+        <svg class="year-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="year-block-body">
+        <div class="sub-tab-row">
+          <button class="sub-tab active" onclick="switchSub('sy','notes',this)">📄 Notes</button>
+          <button class="sub-tab" onclick="switchSub('sy','assignments',this)">📝 Assignments</button>
+          <button class="sub-tab" onclick="switchSub('sy','experiments',this)">🔬 Experiments</button>
+          <button class="sub-tab" onclick="switchSub('sy','pyq',this)">📚 PYQs</button>
+        </div>
+        <div id="sy-notes"       class="sub-panel active"><table class="material-table" id="tbl-sy-notes"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="sy-assignments" class="sub-panel"><table class="material-table" id="tbl-sy-assignments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="sy-experiments" class="sub-panel"><table class="material-table" id="tbl-sy-experiments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="sy-pyq"         class="sub-panel"><table class="material-table" id="tbl-sy-pyq"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Third Year -->
+    <div class="year-block open" id="yb-ty">
+      <div class="year-block-header" onclick="toggleYear('ty')">
+        <div class="year-block-title">
+          <span class="year-tag ty">3rd</span>
+          <span class="year-block-name">Third Year</span>
+        </div>
+        <svg class="year-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="year-block-body">
+        <div class="sub-tab-row">
+          <button class="sub-tab active" onclick="switchSub('ty','notes',this)">📄 Notes</button>
+          <button class="sub-tab" onclick="switchSub('ty','assignments',this)">📝 Assignments</button>
+          <button class="sub-tab" onclick="switchSub('ty','experiments',this)">🔬 Experiments</button>
+          <button class="sub-tab" onclick="switchSub('ty','pyq',this)">📚 PYQs</button>
+        </div>
+        <div id="ty-notes"       class="sub-panel active"><table class="material-table" id="tbl-ty-notes"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="ty-assignments" class="sub-panel"><table class="material-table" id="tbl-ty-assignments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="ty-experiments" class="sub-panel"><table class="material-table" id="tbl-ty-experiments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="ty-pyq"         class="sub-panel"><table class="material-table" id="tbl-ty-pyq"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Final Year -->
+    <div class="year-block open" id="yb-fy">
+      <div class="year-block-header" onclick="toggleYear('fy')">
+        <div class="year-block-title">
+          <span class="year-tag fy">Final</span>
+          <span class="year-block-name">Final Year</span>
+        </div>
+        <svg class="year-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="year-block-body">
+        <div class="sub-tab-row">
+          <button class="sub-tab active" onclick="switchSub('fy','notes',this)">📄 Notes</button>
+          <button class="sub-tab" onclick="switchSub('fy','assignments',this)">📝 Assignments</button>
+          <button class="sub-tab" onclick="switchSub('fy','experiments',this)">🔬 Experiments</button>
+          <button class="sub-tab" onclick="switchSub('fy','pyq',this)">📚 PYQs</button>
+        </div>
+        <div id="fy-notes"       class="sub-panel active"><table class="material-table" id="tbl-fy-notes"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="fy-assignments" class="sub-panel"><table class="material-table" id="tbl-fy-assignments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="fy-experiments" class="sub-panel"><table class="material-table" id="tbl-fy-experiments"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div id="fy-pyq"         class="sub-panel"><table class="material-table" id="tbl-fy-pyq"><thead><tr><th>Title</th><th>Subject</th><th>Uploaded By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel: Pending -->
+  <div class="adm-panel" id="panel-pending">
+    <div id="pending-list"></div>
+  </div>
+
+  <!-- Panel: Log -->
+  <div class="adm-panel" id="panel-log">
+    <div class="log-filters">
+      <button class="log-filter-btn active" onclick="filterLog('all',this)">All</button>
+      <button class="log-filter-btn" onclick="filterLog('approved',this)">✓ Approved</button>
+      <button class="log-filter-btn" onclick="filterLog('rejected',this)">✕ Rejected</button>
+    </div>
+    <div class="log-list" id="log-list"></div>
+  </div>
+
+</main>
+
+<!-- Add File Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <h3>Add Material</h3>
+    <p class="modal-sub">Add a new file directly as admin (auto-approved).</p>
+    <div class="adm-form-group">
+      <label>Year</label>
+      <select id="add-year">
+        <option value="sy">Second Year</option>
+        <option value="ty">Third Year</option>
+        <option value="fy">Final Year</option>
+      </select>
+    </div>
+    <div class="adm-form-group">
+      <label>Type</label>
+      <select id="add-type">
+        <option value="notes">📄 Notes</option>
+        <option value="assignments">📝 Assignments</option>
+        <option value="experiments">🔬 Experiments</option>
+        <option value="pyq">📚 PYQs</option>
+      </select>
+    </div>
+    <div class="adm-form-group">
+      <label>Title</label>
+      <input type="text" id="add-title" placeholder="e.g. Unit 3 – Data Structures"/>
+    </div>
+    <div class="adm-form-group">
+      <label>Subject</label>
+      <input type="text" id="add-subject" placeholder="e.g. Computer Science"/>
+    </div>
+    <div class="adm-form-group">
+      <label>Uploaded By</label>
+      <input type="text" id="add-uploader" placeholder="e.g. Dr. Mehta" value="Dr. Mehta"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-submit" onclick="submitAddFile()">Add & Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div id="undo-toast">
+  <svg class="toast-timer" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="11" fill="none" stroke="#333" stroke-width="2.5"/>
+    <circle id="toast-arc" cx="14" cy="14" r="11" fill="none" stroke="#b5892a" stroke-width="2.5"
+      stroke-dasharray="69.1" stroke-dashoffset="0" stroke-linecap="round"
+      transform="rotate(-90 14 14)"/>
+  </svg>
+  <div class="toast-msg">
+    <strong id="toast-title">Action taken</strong>
+    <small id="toast-sub">File status changed</small>
+  </div>
+  <button class="toast-undo-btn" onclick="undoLast()">↩ Undo</button>
+</div>
+
+<script>
+/* ══════════════════════════════
+   ✅ SESSION GUARD — redirect if not admin
+══════════════════════════════ */
+(function checkAdminSession() {
+  try {
+    const saved = sessionStorage.getItem('sigce_user');
+    if (!saved || JSON.parse(saved).role !== 'admin') {
+      window.location.href = 'index.html';
+    }
+  } catch(e) {
+    window.location.href = 'index.html';
+  }
+})();
+
+/* ══════════════════════════════
+   SHARED DATA via localStorage
+══════════════════════════════ */
+const DEFAULT_FILES = [
+  { id:1,  year:'sy', type:'notes',       title:'Unit 1 – Engineering Maths',         subject:'Mathematics',         uploader:'Rahul Sharma',  date:'2025-03-01', status:'approved', fileUrl:null },
+  { id:2,  year:'sy', type:'assignments', title:'Assignment 2 – Circuits',            subject:'Electronics',         uploader:'Sneha Patil',   date:'2025-03-10', status:'approved', fileUrl:null },
+  { id:3,  year:'sy', type:'assignments', title:'Assignment 4 – Logic Gates',         subject:'Digital Electronics', uploader:'Rahul Sharma',  date:'2025-03-12', status:'approved', fileUrl:null },
+  { id:4,  year:'sy', type:'experiments', title:"Exp 1 – Ohm's Law",                  subject:'Physics Lab',         uploader:'Kiran Desai',   date:'2025-03-08', status:'approved', fileUrl:null },
+  { id:5,  year:'sy', type:'notes',       title:'Thermodynamics Notes',               subject:'Mech Engg',           uploader:'Karan Mehta',   date:'2025-03-17', status:'pending',  fileUrl:null },
+  { id:6,  year:'ty', type:'notes',       title:'Computer Networks – Unit 4',         subject:'CN',                  uploader:'Deepa Verma',   date:'2025-03-06', status:'approved', fileUrl:null },
+  { id:7,  year:'ty', type:'assignments', title:'DBMS Assignment – ER Diagrams',      subject:'DBMS',                uploader:'Anita Rao',     date:'2025-03-11', status:'approved', fileUrl:null },
+  { id:8,  year:'ty', type:'experiments', title:'Exp 4 – Bubble Sort Lab',            subject:'DSA Lab',             uploader:'Amit Joshi',    date:'2025-03-13', status:'approved', fileUrl:null },
+  { id:9,  year:'ty', type:'pyq',         title:'2023 End-Sem Paper',                 subject:'DBMS',                uploader:'Anita Rao',     date:'2025-03-15', status:'approved', fileUrl:null },
+  { id:10, year:'fy', type:'notes',       title:'Deep Learning – Unit 5',             subject:'AI & ML',             uploader:'Riya Shah',     date:'2025-03-04', status:'approved', fileUrl:null },
+  { id:11, year:'fy', type:'assignments', title:'ML Assignment – Linear Regression',  subject:'Machine Learning',    uploader:'Riya Shah',     date:'2025-03-07', status:'approved', fileUrl:null },
+  { id:12, year:'fy', type:'experiments', title:'Exp 2 – Neural Network Training',   subject:'AI Lab',              uploader:'Pooja Reddy',   date:'2025-03-05', status:'approved', fileUrl:null },
+  { id:13, year:'fy', type:'pyq',         title:'Cloud Computing PYQ 2023',           subject:'Cloud Computing',     uploader:'Aman Jain',     date:'2025-03-21', status:'approved', fileUrl:null },
+  { id:14, year:'sy', type:'experiments', title:'Exp 3 – RC Circuit Response',        subject:'Electronics Lab',     uploader:'Priya Nair',    date:'2025-03-15', status:'pending',  fileUrl:null },
+  { id:15, year:'ty', type:'assignments', title:'OS Assignment – Scheduling Algos',   subject:'Operating Systems',   uploader:'Vivek Singh',   date:'2025-03-14', status:'pending',  fileUrl:null },
+];
+
+function loadFiles() {
+  try {
+    const raw = localStorage.getItem('sigce_files');
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_FILES));
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_FILES)); }
+}
+function saveFiles(arr) {
+  try { localStorage.setItem('sigce_files', JSON.stringify(arr)); } catch(e) {}
+}
+function getNextId() {
+  try { return parseInt(localStorage.getItem('sigce_nextid') || '16'); } catch(e) { return 16; }
+}
+function saveNextId(n) {
+  try { localStorage.setItem('sigce_nextid', String(n)); } catch(e) {}
+}
+
+if (!localStorage.getItem('sigce_files')) {
+  saveFiles(JSON.parse(JSON.stringify(DEFAULT_FILES)));
+}
+
+/* ══════════════════
+   CONSTANTS
+══════════════════ */
+const YEAR_LABELS = { sy: 'Second Year', ty: 'Third Year', fy: 'Final Year' };
+const TYPE_LABELS = { notes: 'Notes', assignments: 'Assignments', experiments: 'Experiments', pyq: 'PYQs' };
+const TYPE_ICONS  = { notes: '📄', assignments: '📝', experiments: '🔬', pyq: '📚' };
+
+let actionLog = [];
+let logNextId = 1;
+let logFilter = 'all';
+let lastAction  = null;
+let toastTimer  = null;
+const UNDO_SEC  = 6;
+
+/* ══════════════════
+   LOGOUT
+══════════════════ */
+function adminLogout() {
+  // ✅ Clear session then redirect
+  sessionStorage.removeItem('sigce_user');
+  window.location.href = 'index.html';
+}
+
+/* ══════════════════
+   INIT
+══════════════════ */
+function init() {
+  try {
+    const raw = localStorage.getItem('sigce_log');
+    if (raw) { const parsed = JSON.parse(raw); actionLog = parsed.log; logNextId = parsed.nextId; }
+  } catch(e) {}
+
+  renderAllTables();
+  updateStats();
+  updatePendingBadge();
+}
+
+function saveLog() {
+  try { localStorage.setItem('sigce_log', JSON.stringify({ log: actionLog, nextId: logNextId })); } catch(e) {}
+}
+
+/* ══════════════════
+   PANELS
+══════════════════ */
+const PANELS = ['materials','pending','log'];
+const PANEL_TITLES = {
+  materials: ['All Materials',  'Review and manage uploaded content by year'],
+  pending:   ['Pending Review', 'Files awaiting your approval or rejection'],
+  log:       ['Approval Log',   'Full history of all your approval decisions'],
+};
+
+function showPanel(p) {
+  PANELS.forEach(id => {
+    document.getElementById('panel-'+id).classList.toggle('active', id===p);
+    document.getElementById('nav-'+id).classList.toggle('active', id===p);
+  });
+  document.getElementById('adm-page-title').textContent = PANEL_TITLES[p][0];
+  document.getElementById('adm-page-sub').textContent   = PANEL_TITLES[p][1];
+  if (p === 'pending') renderPending();
+  if (p === 'log')     renderLog();
+}
+
+/* ══════════════════
+   YEAR ACCORDION
+══════════════════ */
+function toggleYear(yr) {
+  document.getElementById('yb-'+yr).classList.toggle('open');
+}
+
+/* ══════════════════
+   SUB TABS
+══════════════════ */
+function switchSub(year, type, btn) {
+  const row = btn.closest('.sub-tab-row');
+  row.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const body = btn.closest('.year-block-body');
+  body.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(year+'-'+type).classList.add('active');
+}
+
+/* ══════════════════
+   RENDER TABLES
+══════════════════ */
+function renderAllTables() {
+  const files = loadFiles();
+  ['sy','ty','fy'].forEach(yr =>
+    ['notes','assignments','experiments','pyq'].forEach(tp =>
+      renderTable(yr, tp, files)
+    )
+  );
+  updateStats();
+  updatePendingBadge();
+}
+
+function renderTable(yr, tp, files) {
+  if (!files) files = loadFiles();
+  const tbody = document.querySelector('#tbl-'+yr+'-'+tp+' tbody');
+  if (!tbody) return;
+  const rows = files.filter(f => f.year===yr && f.type===tp);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No files in this category yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(f => `
+    <tr id="row-${f.id}">
+      <td class="file-title-cell">${escHtml(f.title)}</td>
+      <td class="file-meta-cell">${escHtml(f.subject)}</td>
+      <td class="file-meta-cell">${escHtml(f.uploader)}</td>
+      <td class="file-meta-cell">${f.date || '—'}</td>
+      <td><span class="status-pill ${f.status}" id="pill-${f.id}">${statusLabel(f.status)}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-approve" onclick="approveFile(${f.id})" id="ba-${f.id}" ${f.status!=='pending'?'disabled':''} title="Approve">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#0a3622" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-6"/></svg>
+          </button>
+          <button class="btn-reject" onclick="rejectFile(${f.id})" id="br-${f.id}" ${f.status!=='pending'?'disabled':''} title="Reject">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#842029" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function statusLabel(s) {
+  return s === 'pending' ? '⏳ Pending' : s === 'approved' ? '✓ Approved' : '✕ Rejected';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════
+   APPROVE / REJECT
+══════════════════ */
+function approveFile(id) { changeStatus(id, 'approved'); }
+function rejectFile(id)  { changeStatus(id, 'rejected'); }
+
+function changeStatus(id, newStatus) {
+  const files = loadFiles();
+  const f = files.find(x => x.id === id);
+  if (!f || f.status !== 'pending') return;
+
+  const prevStatus = f.status;
+  f.status = newStatus;
+  saveFiles(files);
+
+  refreshFileRow(f);
+
+  const logEntry = {
+    id: logNextId++, fileId: id, title: f.title, year: f.year, type: f.type,
+    subject: f.subject, uploader: f.uploader, action: newStatus, time: nowStr(), undone: false
+  };
+  actionLog.unshift(logEntry);
+  saveLog();
+
+  lastAction = { fileId: id, prevStatus, logId: logEntry.id };
+
+  updateStats();
+  updatePendingBadge();
+  if (document.getElementById('panel-pending').classList.contains('active')) renderPending();
+  if (document.getElementById('panel-log').classList.contains('active'))     renderLog();
+
+  showToast(f.title, newStatus);
+}
+
+function refreshFileRow(f) {
+  const pill = document.getElementById('pill-' + f.id);
+  if (pill) { pill.className = 'status-pill ' + f.status; pill.textContent = statusLabel(f.status); }
+  const ba = document.getElementById('ba-' + f.id);
+  const br = document.getElementById('br-' + f.id);
+  if (ba) ba.disabled = f.status !== 'pending';
+  if (br) br.disabled = f.status !== 'pending';
+}
+
+/* ══════════════════
+   UNDO
+══════════════════ */
+function undoLast() {
+  if (!lastAction) return;
+  const { fileId, prevStatus, logId } = lastAction;
+  const files = loadFiles();
+  const f = files.find(x => x.id === fileId);
+  if (!f) return;
+
+  f.status = prevStatus;
+  saveFiles(files);
+  refreshFileRow(f);
+
+  const logEntry = actionLog.find(l => l.id === logId);
+  if (logEntry) logEntry.undone = true;
+  saveLog();
+
+  lastAction = null;
+  hideToast();
+  updateStats();
+  updatePendingBadge();
+  if (document.getElementById('panel-pending').classList.contains('active')) renderPending();
+  if (document.getElementById('panel-log').classList.contains('active'))     renderLog();
+}
+
+function undoFromLog(logId) {
+  const logEntry = actionLog.find(l => l.id === logId);
+  if (!logEntry || logEntry.undone) return;
+  const files = loadFiles();
+  const f = files.find(x => x.id === logEntry.fileId);
+  if (!f) return;
+
+  f.status = 'pending';
+  logEntry.undone = true;
+  saveFiles(files);
+  saveLog();
+  refreshFileRow(f);
+  renderTable(f.year, f.type, files);
+
+  if (lastAction && lastAction.logId === logId) {
+    lastAction = null;
+    hideToast();
+  }
+  updateStats();
+  updatePendingBadge();
+  if (document.getElementById('panel-pending').classList.contains('active')) renderPending();
+  renderLog();
+}
+
+/* ══════════════════
+   ADD FILE (Admin)
+══════════════════ */
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-subject').value = '';
+}
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+
+function submitAddFile() {
+  const year     = document.getElementById('add-year').value;
+  const type     = document.getElementById('add-type').value;
+  const title    = document.getElementById('add-title').value.trim();
+  const subject  = document.getElementById('add-subject').value.trim();
+  const uploader = document.getElementById('add-uploader').value.trim() || 'Dr. Mehta';
+  if (!title || !subject) { alert('Please fill in Title and Subject.'); return; }
+
+  const files  = loadFiles();
+  const nextId = getNextId();
+  const today  = new Date();
+  const dateStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+
+  files.push({ id: nextId, year, type, title, subject, uploader, date: dateStr, status: 'approved', fileUrl: null });
+  saveFiles(files);
+  saveNextId(nextId + 1);
+
+  renderTable(year, type, files);
+  updateStats();
+  updatePendingBadge();
+  closeAddModal();
+}
+
+/* ══════════════════
+   TOAST
+══════════════════ */
+function showToast(title, action) {
+  clearTimeout(toastTimer);
+  document.getElementById('toast-title').textContent = action === 'approved' ? '✓ Approved' : '✕ Rejected';
+  document.getElementById('toast-sub').textContent   = title.length > 42 ? title.slice(0,42)+'…' : title;
+
+  const arc = document.getElementById('toast-arc');
+  const circ = 69.1;
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '0';
+
+  const toast = document.getElementById('undo-toast');
+  toast.classList.add('show');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      arc.style.transition = `stroke-dashoffset ${UNDO_SEC}s linear`;
+      arc.style.strokeDashoffset = String(circ);
+    });
+  });
+
+  toastTimer = setTimeout(() => { hideToast(); lastAction = null; }, UNDO_SEC * 1000);
+}
+
+function hideToast() {
+  clearTimeout(toastTimer);
+  document.getElementById('undo-toast').classList.remove('show');
+}
+
+/* ══════════════════
+   STATS
+══════════════════ */
+function updateStats() {
+  const files = loadFiles();
+  document.getElementById('stat-pending').textContent  = files.filter(f=>f.status==='pending').length;
+  document.getElementById('stat-approved').textContent = files.filter(f=>f.status==='approved').length;
+  document.getElementById('stat-rejected').textContent = files.filter(f=>f.status==='rejected').length;
+}
+
+function updatePendingBadge() {
+  const files = loadFiles();
+  const n = files.filter(f=>f.status==='pending').length;
+  const badge = document.getElementById('nb-pending');
+  badge.textContent = n;
+  badge.style.display = n ? 'inline' : 'none';
+}
+
+/* ══════════════════
+   PENDING PANEL
+══════════════════ */
+function renderPending() {
+  const files = loadFiles();
+  const pending = files.filter(f=>f.status==='pending');
+  const container = document.getElementById('pending-list');
+  if (!pending.length) {
+    container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.88rem;">🎉 All caught up! No pending files.</div>';
+    return;
+  }
+  const html = ['sy','ty','fy'].map(yr => {
+    const rows = pending.filter(f=>f.year===yr);
+    if (!rows.length) return '';
+    return `
+      <div class="year-block open" style="margin-bottom:1.2rem">
+        <div class="year-block-header" style="cursor:default">
+          <div class="year-block-title">
+            <span class="year-tag ${yr}">${yr==='sy'?'2nd':yr==='ty'?'3rd':'Final'}</span>
+            <span class="year-block-name">${YEAR_LABELS[yr]}</span>
+          </div>
+        </div>
+        <div class="year-block-body" style="display:block">
+          <table class="material-table" style="margin-top:.8rem">
+            <thead><tr><th>Title</th><th>Subject</th><th>Type</th><th>Uploaded By</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody>
+              ${rows.map(f=>`
+                <tr id="prow-${f.id}">
+                  <td class="file-title-cell">${escHtml(f.title)}</td>
+                  <td class="file-meta-cell">${escHtml(f.subject)}</td>
+                  <td class="file-meta-cell">${TYPE_ICONS[f.type]||''} ${TYPE_LABELS[f.type]||f.type}</td>
+                  <td class="file-meta-cell">${escHtml(f.uploader)}</td>
+                  <td class="file-meta-cell">${f.date||'—'}</td>
+                  <td>
+                    <div class="action-btns">
+                      <button class="btn-approve" onclick="approveFile(${f.id})" id="ba-${f.id}" title="Approve">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#0a3622" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-6"/></svg>
+                      </button>
+                      <button class="btn-reject" onclick="rejectFile(${f.id})" id="br-${f.id}" title="Reject">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#842029" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+  container.innerHTML = html;
+}
+
+/* ══════════════════
+   LOG PANEL
+══════════════════ */
+function filterLog(f, btn) {
+  logFilter = f;
+  document.querySelectorAll('.log-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLog();
+}
+
+function renderLog() {
+  const list = logFilter === 'all' ? actionLog : actionLog.filter(l=>l.action===logFilter);
+  const container = document.getElementById('log-list');
+  if (!list.length) {
+    container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.88rem;">No records found.</div>';
+    return;
+  }
+  container.innerHTML = list.map(l => `
+    <div class="log-card${l.undone?' undone':''}">
+      <div class="log-icon ${l.action}">
+        ${l.action==='approved'
+          ? '<svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="#0a3622" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-6"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="#842029" stroke-width="2.2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>'}
+      </div>
+      <div class="log-body">
+        <div class="log-title">${escHtml(l.title)}${l.undone?' <span style="font-size:.72rem;color:var(--muted);font-weight:400;">(undone)</span>':''}</div>
+        <div class="log-meta">
+          <span>${YEAR_LABELS[l.year]||l.year}</span>
+          <span>${TYPE_LABELS[l.type]||l.type}</span>
+          <span>${escHtml(l.subject)}</span>
+          <span>by ${escHtml(l.uploader)}</span>
+        </div>
+      </div>
+      <div class="log-right">
+        <div class="log-time">${l.time}</div>
+        ${!l.undone
+          ? `<span class="status-pill ${l.action}" style="display:block;margin-bottom:.4rem">${l.action==='approved'?'✓ Approved':'✕ Rejected'}</span>
+             <button class="btn-undo" onclick="undoFromLog(${l.id})">↩ Undo</button>`
+          : `<span class="status-pill pending">↩ Reverted</span>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════
+   UTILS
+══════════════════ */
+function nowStr() {
+  const d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SMT Indira Gandhi College of Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #f5f3ef;
+      --surface: #ffffff;
+      --border:  #e2ddd6;
+      --ink:     #1a1714;
+      --muted:   #7a7269;
+      --accent:  #c0392b;
+      --gold:    #b5892a;
+      --green:   #1a7a4a;
+      --radius:  10px;
+      --shadow:  0 2px 12px rgba(0,0,0,.07);
+      --font-h:  'Playfair Display', serif;
+      --font-b:  'DM Sans', sans-serif;
+    }
+    body { font-family: var(--font-b); background: var(--bg); color: var(--ink); min-height: 100vh; }
+    @keyframes popIn { from{transform:scale(.95);opacity:0} to{transform:scale(1);opacity:1} }
+ 
+    /* ── Page switcher ── */
+    .page { display: none; }
+    .page.active { display: flex; }
+ 
+    /* ══════════ LOGIN ══════════ */
+    #login-page { min-height: 100vh; }
+    .login-bg { display: flex; width: 100%; min-height: 100vh; }
+ 
+    .login-left {
+      width: 48%; background: #111010;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 3rem 2.5rem; position: relative; overflow: hidden;
+    }
+    .lp-left-arc {
+      position: absolute; width: 340px; height: 340px; border-radius: 50%;
+      border: 60px solid rgba(181,137,42,.08); top: -80px; left: -80px; pointer-events: none;
+    }
+    .lp-left-arc2 {
+      position: absolute; width: 220px; height: 220px; border-radius: 50%;
+      border: 40px solid rgba(192,57,43,.07); bottom: -50px; right: -50px; pointer-events: none;
+    }
+    .lp-crest {
+      width: 72px; height: 72px; border: 2px solid var(--gold); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.4rem; position: relative; z-index: 1;
+    }
+    .lp-crest svg { width: 36px; height: 36px; }
+    .college-brand { position: relative; z-index: 1; text-align: center; }
+    .college-brand h1 {
+      font-family: var(--font-h); font-size: clamp(1.2rem, 2vw, 1.5rem);
+      color: #fff; line-height: 1.4; margin-bottom: .5rem;
+    }
+    .college-brand p { color: var(--gold); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; }
+    .lp-divider { width: 40px; height: 1px; background: #2a2a2a; margin: 1.6rem auto; }
+    .lp-pillars { display: flex; gap: 1.5rem; justify-content: center; position: relative; z-index: 1; }
+    .lp-pillar { text-align: center; }
+    .lp-pillar-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: #1c1c1c; border: 1px solid #2a2a2a;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto .4rem;
+    }
+    .lp-pillar-label { font-size: .67rem; color: #555; letter-spacing: .06em; }
+ 
+    .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem; }
+    .login-box {
+      width: 100%; max-width: 360px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 2.5rem; box-shadow: var(--shadow);
+    }
+    .lp-greeting { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .3rem; }
+    .login-box h2 { font-family: var(--font-h); font-size: 1.9rem; line-height: 1.15; margin-bottom: 1.5rem; }
+    .login-toggle {
+      display: flex; background: var(--bg); border-radius: 8px;
+      padding: 3px; gap: 3px; margin-bottom: 1.4rem;
+    }
+    .toggle-btn {
+      flex: 1; padding: .42rem; border: none; border-radius: 6px;
+      background: transparent; font-family: var(--font-b); font-size: .8rem;
+      color: var(--muted); cursor: pointer; transition: all .2s;
+    }
+    .toggle-btn.active { background: var(--surface); color: var(--ink); font-weight: 500; border: 1px solid var(--border); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .72rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+    .form-group input {
+      width: 100%; padding: .65rem .9rem; border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: var(--font-b); font-size: .88rem; background: var(--bg); color: var(--ink);
+      outline: none; transition: border .2s;
+    }
+    .form-group input:focus { border-color: var(--gold); }
+    .login-hint { font-size: .73rem; color: var(--muted); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 5px; }
+    .hint-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; display: inline-block; }
+    .login-err { font-size: .78rem; color: var(--accent); margin-top: .6rem; min-height: 1.1em; text-align: center; }
+    .lp-footer-note { font-size: .68rem; color: var(--muted); text-align: center; margin-top: 1.2rem; }
+    .btn-primary {
+      background: var(--ink); color: #fff; border: none; border-radius: var(--radius);
+      padding: .75rem 1.5rem; font-family: var(--font-b); font-size: .9rem; font-weight: 500;
+      cursor: pointer; transition: background .2s, transform .1s; width: 100%;
+    }
+    .btn-primary:hover { background: #333; }
+    .btn-primary:active { transform: scale(.98); }
+ 
+    /* ══════════ STUDENT APP ══════════ */
+    #student-app { display: none; min-height: 100vh; font-family: var(--font-b); background: var(--bg); color: var(--ink); }
+    #student-app.active { display: flex; }
+ 
+    #st-sidebar {
+      width: 220px; min-height: 100vh; background: var(--ink);
+      display: flex; flex-direction: column; padding: 1.5rem 1rem;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+    }
+    .st-brand { display: flex; align-items: center; gap: .7rem; padding-bottom: 1.3rem; border-bottom: 1px solid #262626; margin-bottom: 1.2rem; }
+    .st-crest {
+      width: 36px; height: 36px; border: 1.5px solid var(--gold); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .st-brand-text { font-family: var(--font-h); color: #fff; font-size: .9rem; line-height: 1.2; }
+    .st-brand-sub  { font-size: .65rem; color: #555; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
+    .st-nav-label  { font-size: .63rem; text-transform: uppercase; letter-spacing: .14em; color: #444; margin: 1.1rem 0 .45rem .3rem; }
+    .st-nav-item {
+      display: flex; align-items: center; gap: .5rem; padding: .52rem .75rem;
+      border-radius: 8px; color: #888; font-size: .84rem; cursor: pointer;
+      transition: background .15s, color .15s; margin-bottom: 2px; user-select: none;
+    }
+    .st-nav-item:hover { background: #1e1e1e; color: #ddd; }
+    .st-nav-item.active { background: var(--gold); color: #fff; font-weight: 500; }
+    .ni-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .5; flex-shrink: 0; }
+    .st-sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid #262626; }
+    .st-user-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+    .st-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: #2a2a2a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; color: var(--gold); font-weight: 500; flex-shrink: 0;
+    }
+    .st-user-name { font-size: .82rem; color: #ccc; }
+    .st-user-role { font-size: .67rem; color: #555; }
+    .st-btn-logout {
+      width: 100%; padding: .5rem; border: 1px solid #2a2a2a; border-radius: 8px;
+      background: transparent; color: #666; font-family: var(--font-b); font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .st-btn-logout:hover { background: #1e1e1e; color: #aaa; }
+ 
+    #st-main { margin-left: 220px; flex: 1; padding: 2rem 2.2rem; min-height: 100vh; }
+    .st-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+    .st-page-title { font-family: var(--font-h); font-size: 1.7rem; }
+    .st-page-sub   { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+    .st-upload-btn {
+      display: flex; align-items: center; gap: .5rem; padding: .55rem 1.2rem;
+      background: var(--ink); color: #fff; border: none; border-radius: 8px;
+      font-family: var(--font-b); font-size: .84rem; font-weight: 500;
+      cursor: pointer; transition: background .2s; flex-shrink: 0;
+    }
+    .st-upload-btn:hover { background: #333; }
+ 
+    /* Year blocks */
+    .st-year-block { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 1.2rem; overflow: hidden; }
+    .st-year-header { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.4rem; cursor: pointer; user-select: none; transition: background .15s; }
+    .st-year-header:hover { background: #faf9f7; }
+    .st-year-title { display: flex; align-items: center; gap: .7rem; }
+    .st-year-tag { font-size: .7rem; font-weight: 500; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .07em; }
+    .st-year-tag.sy { background: #e8f4fd; color: #1a5e9a; }
+    .st-year-tag.ty { background: #eaf3de; color: #3b6d11; }
+    .st-year-tag.fy { background: #faeeda; color: #854f0b; }
+    .st-year-name { font-family: var(--font-h); font-size: 1.05rem; }
+    .st-chevron { width: 18px; height: 18px; transition: transform .25s; color: var(--muted); }
+    .st-year-block.open .st-chevron { transform: rotate(180deg); }
+    .st-year-body { display: none; padding: 0 1.4rem 1.4rem; border-top: 1px solid var(--border); }
+    .st-year-block.open .st-year-body { display: block; }
+ 
+    /* Sub tabs */
+    .st-sub-tab-row { display: flex; gap: .45rem; padding: 1rem 0 .9rem; flex-wrap: wrap; }
+    .st-sub-tab {
+      padding: .4rem 1rem; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg); font-family: var(--font-b); font-size: .78rem;
+      color: var(--muted); cursor: pointer; transition: all .18s;
+    }
+    .st-sub-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .st-sub-panel { display: none; }
+    .st-sub-panel.active { display: block; }
+ 
+    /* File cards */
+    .st-file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1rem; }
+    .st-file-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.1rem 1rem; display: flex; flex-direction: column; gap: .35rem;
+      transition: box-shadow .18s, transform .18s;
+    }
+    .st-file-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .st-file-icon     { font-size: 1.8rem; margin-bottom: .15rem; }
+    .st-file-name     { font-weight: 500; font-size: .88rem; line-height: 1.35; color: var(--ink); }
+    .st-file-subject  { font-size: .75rem; color: var(--muted); }
+    .st-file-uploader { font-size: .72rem; color: var(--muted); }
+    .st-file-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: .55rem; padding-top: .6rem; border-top: 1px solid var(--border);
+    }
+    .st-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: .68rem; font-weight: 500; }
+    .st-badge.approved { background: #d1e7dd; color: #0a3622; }
+    .st-badge.pending  { background: #fff3cd; color: #856404; }
+    .st-badge.rejected { background: #f8d7da; color: #842029; }
+    .st-dl-btn {
+      display: inline-flex; align-items: center; gap: 4px; padding: .32rem .75rem;
+      background: var(--ink); color: #fff; border: none; border-radius: 6px;
+      font-family: var(--font-b); font-size: .72rem; cursor: pointer; transition: background .18s;
+    }
+    .st-dl-btn:hover { background: #333; }
+    .st-empty { text-align: center; color: var(--muted); font-size: .84rem; padding: 2rem 1rem; grid-column: 1 / -1; }
+ 
+    /* My Uploads table */
+    .st-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .st-table { width: 100%; border-collapse: collapse; }
+    .st-table th {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted);
+      font-weight: 500; padding: .65rem 1.1rem; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg);
+    }
+    .st-table td { padding: .78rem 1.1rem; font-size: .85rem; border-bottom: 1px solid #f0ede8; vertical-align: middle; }
+    .st-table tr:last-child td { border-bottom: none; }
+    .st-table tr:hover td { background: #faf9f7; }
+ 
+    /* Upload Modal */
+    .st-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 999; align-items: center; justify-content: center; }
+    .st-modal-overlay.open { display: flex; }
+    .st-modal-box { background: var(--surface); border-radius: 16px; padding: 2rem; width: min(440px, 94vw); box-shadow: 0 8px 40px rgba(0,0,0,.18); animation: popIn .2s ease; }
+    .st-modal-box h3 { font-family: var(--font-h); font-size: 1.3rem; margin-bottom: .25rem; }
+    .st-modal-sub { font-size: .8rem; color: var(--muted); margin-bottom: 1.4rem; }
+    .st-form-group { margin-bottom: 1rem; }
+    .st-form-group label { display: block; font-size: .72rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+    .st-form-group input, .st-form-group select {
+      width: 100%; padding: .65rem .9rem; border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: var(--font-b); font-size: .88rem; background: var(--bg); color: var(--ink); outline: none; transition: border .2s;
+    }
+    .st-form-group input:focus, .st-form-group select:focus { border-color: var(--gold); }
+    .st-modal-actions { display: flex; gap: .7rem; justify-content: flex-end; margin-top: 1.4rem; }
+    .st-btn-cancel { padding: .6rem 1.2rem; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; font-family: var(--font-b); font-size: .86rem; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .st-btn-cancel:hover { background: var(--bg); color: var(--ink); }
+    .st-btn-submit { padding: .6rem 1.4rem; border: none; border-radius: var(--radius); background: var(--ink); color: #fff; font-family: var(--font-b); font-size: .86rem; font-weight: 500; cursor: pointer; transition: background .2s; }
+    .st-btn-submit:hover { background: #333; }
+ 
+    /* Toast */
+    #st-toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--ink); color: #fff; border-radius: 12px; padding: .75rem 1.5rem;
+      font-size: .85rem; box-shadow: 0 4px 20px rgba(0,0,0,.25); z-index: 9999;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0; pointer-events: none; white-space: nowrap;
+    }
+    #st-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+ 
+    @media (max-width: 700px) {
+      .login-left { display: none; }
+      .login-right { padding: 2rem 1.4rem; }
+      #st-sidebar { width: 180px; }
+      #st-main { margin-left: 180px; padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+ 
+<!-- ══════════ LOGIN PAGE ══════════ -->
+<div id="login-page" class="page active">
+  <div class="login-bg">
+    <div class="login-left">
+      <div class="lp-left-arc"></div>
+      <div class="lp-left-arc2"></div>
+      <div class="lp-crest">
+        <svg viewBox="0 0 36 36" fill="none">
+          <polygon points="18,4 32,12 32,24 18,32 4,24 4,12" stroke="#b5892a" stroke-width="1.4" fill="none"/>
+          <circle cx="18" cy="18" r="5" stroke="#b5892a" stroke-width="1.2" fill="none"/>
+          <line x1="18" y1="4" x2="18" y2="13" stroke="#b5892a" stroke-width="1"/>
+          <line x1="18" y1="23" x2="18" y2="32" stroke="#b5892a" stroke-width="1"/>
+          <line x1="4" y1="12" x2="13" y2="15.5" stroke="#b5892a" stroke-width="1"/>
+          <line x1="23" y1="20.5" x2="32" y2="24" stroke="#b5892a" stroke-width="1"/>
+          <line x1="4" y1="24" x2="13" y2="20.5" stroke="#b5892a" stroke-width="1"/>
+          <line x1="23" y1="15.5" x2="32" y2="12" stroke="#b5892a" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="college-brand">
+        <h1>Smt. Indira Gandhi<br/>College of Engineering</h1>
+        <p>Knowledge · Integrity · Excellence</p>
+      </div>
+      <div class="lp-divider"></div>
+      <div class="lp-pillars">
+        <div class="lp-pillar">
+          <div class="lp-pillar-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="10" width="12" height="4" rx="1" stroke="#555" stroke-width="1.1"/>
+              <rect x="5" y="6" width="6" height="4" stroke="#555" stroke-width="1.1"/>
+              <rect x="7" y="2" width="2" height="4" stroke="#555" stroke-width="1.1"/>
+            </svg>
+          </div>
+          <div class="lp-pillar-label">Campus</div>
+        </div>
+        <div class="lp-pillar">
+          <div class="lp-pillar-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 12 L8 3 L13 12" stroke="#555" stroke-width="1.1" stroke-linejoin="round"/>
+              <line x1="5" y1="9" x2="11" y2="9" stroke="#555" stroke-width="1.1"/>
+            </svg>
+          </div>
+          <div class="lp-pillar-label">Research</div>
+        </div>
+        <div class="lp-pillar">
+          <div class="lp-pillar-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="5" stroke="#555" stroke-width="1.1"/>
+              <path d="M5.5 8 L7.5 10 L10.5 6" stroke="#555" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="lp-pillar-label">Results</div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="login-right">
+      <div class="login-box">
+        <div class="lp-greeting">Student &amp; Admin Portal</div>
+        <h2 id="login-title">Welcome<br/>back.</h2>
+        <div class="login-toggle">
+          <button class="toggle-btn active" id="btn-student" onclick="switchRole('student')">Student</button>
+          <button class="toggle-btn" id="btn-admin" onclick="switchRole('admin')">Administrator</button>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="login-user" placeholder="Enter your ID" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <p class="login-hint" id="login-hint"><span class="hint-dot"></span> Use: <b>student</b> / <b>pass123</b></p>
+        <button class="btn-primary" onclick="doLogin()">
+          Sign in
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-left:6px;vertical-align:middle">
+            <path d="M3 7h8M8 4l3 3-3 3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <p class="login-err" id="login-err"></p>
+        <p class="lp-footer-note">Academic Year 2024–25 · Autonomous Institution</p>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ══════════ STUDENT APP ══════════ -->
+<div id="student-app">
+ 
+  <aside id="st-sidebar">
+    <div class="st-brand">
+      <div class="st-crest">
+        <svg width="18" height="18" viewBox="0 0 36 36" fill="none">
+          <polygon points="18,4 32,12 32,24 18,32 4,24 4,12" stroke="#b5892a" stroke-width="1.6" fill="none"/>
+          <circle cx="18" cy="18" r="5" stroke="#b5892a" stroke-width="1.4" fill="none"/>
+        </svg>
+      </div>
+      <div>
+        <div class="st-brand-text">SIGCE</div>
+        <div class="st-brand-sub">Student Portal</div>
+      </div>
+    </div>
+ 
+    <nav>
+      <div class="st-nav-label">Browse</div>
+      <div class="st-nav-item active" id="st-nav-sy" onclick="stShowYear('sy')">
+        <span class="ni-dot"></span> Second Year
+      </div>
+      <div class="st-nav-item" id="st-nav-ty" onclick="stShowYear('ty')">
+        <span class="ni-dot"></span> Third Year
+      </div>
+      <div class="st-nav-item" id="st-nav-fy" onclick="stShowYear('fy')">
+        <span class="ni-dot"></span> Final Year
+      </div>
+      <div class="st-nav-label">My Activity</div>
+      <div class="st-nav-item" id="st-nav-mine" onclick="stShowMyUploads()">
+        <span class="ni-dot"></span> My Submissions
+      </div>
+    </nav>
+ 
+    <div class="st-sidebar-footer">
+      <div class="st-user-row">
+        <div class="st-avatar" id="st-avatar">PS</div>
+        <div>
+          <div class="st-user-name" id="st-user-name">Priya Sharma</div>
+          <div class="st-user-role">Student</div>
+        </div>
+      </div>
+      <button class="st-btn-logout" onclick="doLogout()">← Logout</button>
+    </div>
+  </aside>
+ 
+  <main id="st-main">
+    <div class="st-topbar">
+      <div>
+        <div class="st-page-title" id="st-page-title">Second Year</div>
+        <div class="st-page-sub" id="st-page-sub">Browse and download approved study materials</div>
+      </div>
+      <button class="st-upload-btn" onclick="stOpenUpload()">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+          <path d="M7 2v10M2 7h10"/>
+        </svg>
+        Upload Material
+      </button>
+    </div>
+ 
+    <!-- Browse Panel -->
+    <div id="st-panel-browse">
+      <!-- Second Year -->
+      <div class="st-year-block open" id="st-yb-sy">
+        <div class="st-year-header" onclick="stToggleYear('sy')">
+          <div class="st-year-title">
+            <span class="st-year-tag sy">2nd</span>
+            <span class="st-year-name">Second Year</span>
+          </div>
+          <svg class="st-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="st-year-body">
+          <div class="st-sub-tab-row">
+            <button class="st-sub-tab active" onclick="stSwitchSub('sy','notes',this)">📄 Notes</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('sy','assignments',this)">📝 Assignments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('sy','experiments',this)">🔬 Experiments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('sy','pyq',this)">📚 PYQs</button>
+          </div>
+          <div id="st-sy-notes"       class="st-sub-panel active"><div class="st-file-grid" id="stg-sy-notes"></div></div>
+          <div id="st-sy-assignments" class="st-sub-panel"><div class="st-file-grid" id="stg-sy-assignments"></div></div>
+          <div id="st-sy-experiments" class="st-sub-panel"><div class="st-file-grid" id="stg-sy-experiments"></div></div>
+          <div id="st-sy-pyq"         class="st-sub-panel"><div class="st-file-grid" id="stg-sy-pyq"></div></div>
+        </div>
+      </div>
+ 
+      <!-- Third Year -->
+      <div class="st-year-block open" id="st-yb-ty">
+        <div class="st-year-header" onclick="stToggleYear('ty')">
+          <div class="st-year-title">
+            <span class="st-year-tag ty">3rd</span>
+            <span class="st-year-name">Third Year</span>
+          </div>
+          <svg class="st-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="st-year-body">
+          <div class="st-sub-tab-row">
+            <button class="st-sub-tab active" onclick="stSwitchSub('ty','notes',this)">📄 Notes</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('ty','assignments',this)">📝 Assignments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('ty','experiments',this)">🔬 Experiments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('ty','pyq',this)">📚 PYQs</button>
+          </div>
+          <div id="st-ty-notes"       class="st-sub-panel active"><div class="st-file-grid" id="stg-ty-notes"></div></div>
+          <div id="st-ty-assignments" class="st-sub-panel"><div class="st-file-grid" id="stg-ty-assignments"></div></div>
+          <div id="st-ty-experiments" class="st-sub-panel"><div class="st-file-grid" id="stg-ty-experiments"></div></div>
+          <div id="st-ty-pyq"         class="st-sub-panel"><div class="st-file-grid" id="stg-ty-pyq"></div></div>
+        </div>
+      </div>
+ 
+      <!-- Final Year -->
+      <div class="st-year-block open" id="st-yb-fy">
+        <div class="st-year-header" onclick="stToggleYear('fy')">
+          <div class="st-year-title">
+            <span class="st-year-tag fy">Final</span>
+            <span class="st-year-name">Final Year</span>
+          </div>
+          <svg class="st-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="st-year-body">
+          <div class="st-sub-tab-row">
+            <button class="st-sub-tab active" onclick="stSwitchSub('fy','notes',this)">📄 Notes</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('fy','assignments',this)">📝 Assignments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('fy','experiments',this)">🔬 Experiments</button>
+            <button class="st-sub-tab" onclick="stSwitchSub('fy','pyq',this)">📚 PYQs</button>
+          </div>
+          <div id="st-fy-notes"       class="st-sub-panel active"><div class="st-file-grid" id="stg-fy-notes"></div></div>
+          <div id="st-fy-assignments" class="st-sub-panel"><div class="st-file-grid" id="stg-fy-assignments"></div></div>
+          <div id="st-fy-experiments" class="st-sub-panel"><div class="st-file-grid" id="stg-fy-experiments"></div></div>
+          <div id="st-fy-pyq"         class="st-sub-panel"><div class="st-file-grid" id="stg-fy-pyq"></div></div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- My Uploads Panel -->
+    <div id="st-panel-mine" style="display:none">
+      <div class="st-table-wrap">
+        <div id="st-mine-body"></div>
+      </div>
+    </div>
+  </main>
+</div>
+ 
+<!-- Upload Modal -->
+<div class="st-modal-overlay" id="st-upload-modal">
+  <div class="st-modal-box">
+    <h3>Upload Material</h3>
+    <p class="st-modal-sub">Your file will be reviewed by the admin before being published.</p>
+    <div class="st-form-group">
+      <label>Year</label>
+      <select id="st-up-year">
+        <option value="sy">Second Year</option>
+        <option value="ty">Third Year</option>
+        <option value="fy">Final Year</option>
+      </select>
+    </div>
+    <div class="st-form-group">
+      <label>Type</label>
+      <select id="st-up-type">
+        <option value="notes">📄 Notes</option>
+        <option value="assignments">📝 Assignments</option>
+        <option value="experiments">🔬 Experiments</option>
+        <option value="pyq">📚 PYQs</option>
+      </select>
+    </div>
+    <div class="st-form-group">
+      <label>Title</label>
+      <input type="text" id="st-up-title" placeholder="e.g. Unit 3 – Data Structures"/>
+    </div>
+    <div class="st-form-group">
+      <label>Subject</label>
+      <input type="text" id="st-up-subject" placeholder="e.g. Computer Science"/>
+    </div>
+    <div class="st-form-group">
+      <label>File (optional)</label>
+      <input type="file" id="st-up-file"/>
+    </div>
+    <div class="st-modal-actions">
+      <button class="st-btn-cancel" onclick="stCloseUpload()">Cancel</button>
+      <button class="st-btn-submit" onclick="stSubmitUpload()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="st-toast">✅ Submitted! Awaiting admin approval.</div>
+ 
+<script>
+/* ══════════════════════════════
+   SHARED DATA via localStorage
+══════════════════════════════ */
+const DEFAULT_FILES = [
+  { id:1,  year:'sy', type:'notes',       title:'Unit 1 – Engineering Maths',         subject:'Mathematics',         uploader:'Rahul Sharma',  date:'2025-03-01', status:'approved', fileUrl:null },
+  { id:2,  year:'sy', type:'assignments', title:'Assignment 2 – Circuits',            subject:'Electronics',         uploader:'Sneha Patil',   date:'2025-03-10', status:'approved', fileUrl:null },
+  { id:3,  year:'sy', type:'assignments', title:'Assignment 4 – Logic Gates',         subject:'Digital Electronics', uploader:'Rahul Sharma',  date:'2025-03-12', status:'approved', fileUrl:null },
+  { id:4,  year:'sy', type:'experiments', title:"Exp 1 – Ohm's Law",                  subject:'Physics Lab',         uploader:'Kiran Desai',   date:'2025-03-08', status:'approved', fileUrl:null },
+  { id:5,  year:'sy', type:'notes',       title:'Thermodynamics Notes',               subject:'Mech Engg',           uploader:'Karan Mehta',   date:'2025-03-17', status:'pending',  fileUrl:null },
+  { id:6,  year:'ty', type:'notes',       title:'Computer Networks – Unit 4',         subject:'CN',                  uploader:'Deepa Verma',   date:'2025-03-06', status:'approved', fileUrl:null },
+  { id:7,  year:'ty', type:'assignments', title:'DBMS Assignment – ER Diagrams',      subject:'DBMS',                uploader:'Anita Rao',     date:'2025-03-11', status:'approved', fileUrl:null },
+  { id:8,  year:'ty', type:'experiments', title:'Exp 4 – Bubble Sort Lab',            subject:'DSA Lab',             uploader:'Amit Joshi',    date:'2025-03-13', status:'approved', fileUrl:null },
+  { id:9,  year:'ty', type:'pyq',         title:'2023 End-Sem Paper',                 subject:'DBMS',                uploader:'Anita Rao',     date:'2025-03-15', status:'approved', fileUrl:null },
+  { id:10, year:'fy', type:'notes',       title:'Deep Learning – Unit 5',             subject:'AI & ML',             uploader:'Riya Shah',     date:'2025-03-04', status:'approved', fileUrl:null },
+  { id:11, year:'fy', type:'assignments', title:'ML Assignment – Linear Regression',  subject:'Machine Learning',    uploader:'Riya Shah',     date:'2025-03-07', status:'approved', fileUrl:null },
+  { id:12, year:'fy', type:'experiments', title:'Exp 2 – Neural Network Training',   subject:'AI Lab',              uploader:'Pooja Reddy',   date:'2025-03-05', status:'approved', fileUrl:null },
+  { id:13, year:'fy', type:'pyq',         title:'Cloud Computing PYQ 2023',           subject:'Cloud Computing',     uploader:'Aman Jain',     date:'2025-03-21', status:'approved', fileUrl:null },
+  { id:14, year:'sy', type:'experiments', title:'Exp 3 – RC Circuit Response',        subject:'Electronics Lab',     uploader:'Priya Nair',    date:'2025-03-15', status:'pending',  fileUrl:null },
+  { id:15, year:'ty', type:'assignments', title:'OS Assignment – Scheduling Algos',   subject:'Operating Systems',   uploader:'Vivek Singh',   date:'2025-03-14', status:'pending',  fileUrl:null },
+];
+ 
+function loadFiles() {
+  try {
+    const raw = localStorage.getItem('sigce_files');
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_FILES));
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_FILES)); }
+}
+ 
+function saveFiles(arr) {
+  try { localStorage.setItem('sigce_files', JSON.stringify(arr)); } catch(e) {}
+}
+ 
+function getNextId() {
+  try { return parseInt(localStorage.getItem('sigce_nextid') || '16'); } catch(e) { return 16; }
+}
+function saveNextId(n) {
+  try { localStorage.setItem('sigce_nextid', String(n)); } catch(e) {}
+}
+ 
+// Init storage if empty
+if (!localStorage.getItem('sigce_files')) {
+  saveFiles(JSON.parse(JSON.stringify(DEFAULT_FILES)));
+}
+ 
+/* ══════════════════
+   CONSTANTS
+══════════════════ */
+const USERS = {
+  student: { pass: 'pass123', name: 'Priya Sharma', role: 'student' },
+  admin:   { pass: 'admin123', name: 'Dr. Mehta',   role: 'admin'   }
+};
+const YEAR_LABELS = { sy: 'Second Year', ty: 'Third Year', fy: 'Final Year' };
+const TYPE_LABELS = { notes: 'Notes', assignments: 'Assignments', experiments: 'Experiments', pyq: 'PYQs' };
+const TYPE_ICONS  = { notes: '📄', assignments: '📝', experiments: '🔬', pyq: '📚' };
+ 
+let currentUser = null;
+let currentRole = 'student';
+ 
+/* ══════════════════
+   LOGIN
+══════════════════ */
+function switchRole(role) {
+  currentRole = role;
+  document.getElementById('btn-student').classList.toggle('active', role === 'student');
+  document.getElementById('btn-admin').classList.toggle('active', role === 'admin');
+  document.getElementById('login-title').innerHTML = role === 'admin' ? 'Admin<br/>Login.' : 'Welcome<br/>back.';
+  document.getElementById('login-hint').innerHTML  = role === 'admin'
+    ? '<span class="hint-dot"></span> Use: <b>admin</b> / <b>admin123</b>'
+    : '<span class="hint-dot"></span> Use: <b>student</b> / <b>pass123</b>';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+ 
+function doLogin() {
+  const u   = document.getElementById('login-user').value.trim();
+  const p   = document.getElementById('login-pass').value.trim();
+  const err = document.getElementById('login-err');
+  const key = currentRole === 'admin' ? 'admin' : 'student';
+ 
+  if (u === key && p === USERS[key].pass) {
+    currentUser = USERS[key];
+    err.textContent = '';
+    // ✅ SAVE SESSION so reload doesn't log out
+    sessionStorage.setItem('sigce_user', JSON.stringify(currentUser));
+    if (currentRole === 'admin') {
+      window.location.href = 'admin.html';
+      return;
+    }
+    showStudentApp();
+  } else {
+    err.textContent = 'Invalid credentials. Try again.';
+  }
+}
+ 
+function doLogout() {
+  currentUser = null;
+  // ✅ CLEAR SESSION on logout
+  sessionStorage.removeItem('sigce_user');
+  document.getElementById('student-app').classList.remove('active');
+  document.getElementById('login-page').classList.add('active');
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  switchRole('student');
+}
+ 
+/* ══════════════════
+   STUDENT APP
+══════════════════ */
+function showStudentApp() {
+  document.getElementById('login-page').classList.remove('active');
+  document.getElementById('student-app').classList.add('active');
+  const name = currentUser.name;
+  document.getElementById('st-user-name').textContent = name;
+  document.getElementById('st-avatar').textContent =
+    name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  stRenderAllGrids();
+  stShowYear('sy');
+}
+ 
+function stShowYear(yr) {
+  ['sy','ty','fy'].forEach(y =>
+    document.getElementById('st-nav-' + y).classList.toggle('active', y === yr)
+  );
+  document.getElementById('st-nav-mine').classList.remove('active');
+  document.getElementById('st-panel-browse').style.display = 'block';
+  document.getElementById('st-panel-mine').style.display   = 'none';
+  document.getElementById('st-page-title').textContent = YEAR_LABELS[yr];
+  document.getElementById('st-page-sub').textContent   = 'Browse and download approved study materials';
+}
+ 
+function stToggleYear(yr) {
+  document.getElementById('st-yb-' + yr).classList.toggle('open');
+}
+ 
+function stSwitchSub(year, type, btn) {
+  btn.closest('.st-sub-tab-row').querySelectorAll('.st-sub-tab')
+    .forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.st-year-body').querySelectorAll('.st-sub-panel')
+    .forEach(p => p.classList.remove('active'));
+  document.getElementById('st-' + year + '-' + type).classList.add('active');
+}
+ 
+function stRenderAllGrids() {
+  const files = loadFiles();
+  ['sy','ty','fy'].forEach(yr =>
+    ['notes','assignments','experiments','pyq'].forEach(tp =>
+      stRenderGrid(yr, tp, files)
+    )
+  );
+}
+ 
+function stRenderGrid(yr, tp, files) {
+  const grid = document.getElementById('stg-' + yr + '-' + tp);
+  if (!grid) return;
+  const list = files.filter(f => f.year === yr && f.type === tp && f.status === 'approved');
+  if (!list.length) {
+    grid.innerHTML = '<p class="st-empty">No approved materials yet in this section.</p>';
+    return;
+  }
+  grid.innerHTML = list.map(f => `
+    <div class="st-file-card">
+      <div class="st-file-icon">${TYPE_ICONS[f.type]}</div>
+      <div class="st-file-name">${escHtml(f.title)}</div>
+      <div class="st-file-subject">${escHtml(f.subject)}</div>
+      <div class="st-file-uploader">by ${escHtml(f.uploader)}</div>
+      <div class="st-file-footer">
+        <span class="st-badge approved">✓ Approved</span>
+        <button class="st-dl-btn" onclick="stDownload(${f.id})">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 2v7M4 6l3 3 3-3"/><path d="M2 11h10"/>
+          </svg>
+          Download
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+ 
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+ 
+function stDownload(id) {
+  const files = loadFiles();
+  const f = files.find(x => x.id === id);
+  if (!f) return;
+  const content = `Title: ${f.title}\nSubject: ${f.subject}\nYear: ${YEAR_LABELS[f.year]}\nType: ${TYPE_LABELS[f.type]}\nUploaded by: ${f.uploader}\n\n[Demo file — in production the actual uploaded file would download here.]`;
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = f.title + '.txt'; a.click();
+  URL.revokeObjectURL(url);
+}
+ 
+/* ══════════════════
+   MY SUBMISSIONS
+══════════════════ */
+function stShowMyUploads() {
+  ['sy','ty','fy'].forEach(y =>
+    document.getElementById('st-nav-' + y).classList.remove('active')
+  );
+  document.getElementById('st-nav-mine').classList.add('active');
+  document.getElementById('st-panel-browse').style.display = 'none';
+  document.getElementById('st-panel-mine').style.display   = 'block';
+  document.getElementById('st-page-title').textContent = 'My Submissions';
+  document.getElementById('st-page-sub').textContent   = 'Track the status of your uploaded materials';
+  stRenderMyUploads();
+}
+ 
+function stRenderMyUploads() {
+  const files = loadFiles();
+  const mine = files.filter(f => f.uploader === currentUser.name);
+  const container = document.getElementById('st-mine-body');
+  if (!mine.length) {
+    container.innerHTML = `<p style="text-align:center;padding:3rem;color:var(--muted);font-size:.88rem">
+      You haven't uploaded anything yet.<br/>Click <b>Upload Material</b> to get started!
+    </p>`;
+    return;
+  }
+  container.innerHTML = `
+    <table class="st-table">
+      <thead><tr><th>Title</th><th>Year</th><th>Type</th><th>Subject</th><th>Status</th></tr></thead>
+      <tbody>
+        ${mine.map(f => `
+          <tr>
+            <td style="font-weight:500">${escHtml(f.title)}</td>
+            <td style="color:var(--muted)">${YEAR_LABELS[f.year]}</td>
+            <td style="color:var(--muted)">${TYPE_ICONS[f.type]} ${TYPE_LABELS[f.type]}</td>
+            <td style="color:var(--muted)">${escHtml(f.subject)}</td>
+            <td><span class="st-badge ${f.status}">
+              ${f.status === 'approved' ? '✓ Approved' : f.status === 'pending' ? '⏳ Pending' : '✕ Rejected'}
+            </span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+ 
+/* ══════════════════
+   UPLOAD MODAL
+══════════════════ */
+function stOpenUpload() {
+  document.getElementById('st-upload-modal').classList.add('open');
+}
+ 
+function stCloseUpload() {
+  document.getElementById('st-upload-modal').classList.remove('open');
+  document.getElementById('st-up-title').value   = '';
+  document.getElementById('st-up-subject').value = '';
+  document.getElementById('st-up-file').value    = '';
+}
+ 
+document.getElementById('st-upload-modal').addEventListener('click', function(e) {
+  if (e.target === this) stCloseUpload();
+});
+ 
+function stSubmitUpload() {
+  const year    = document.getElementById('st-up-year').value;
+  const type    = document.getElementById('st-up-type').value;
+  const title   = document.getElementById('st-up-title').value.trim();
+  const subject = document.getElementById('st-up-subject').value.trim();
+  if (!title || !subject) {
+    alert('Please fill in the Title and Subject fields.');
+    return;
+  }
+  const files  = loadFiles();
+  const nextId = getNextId();
+  const today  = new Date();
+  const dateStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+ 
+  files.push({ id: nextId, year, type, title, subject, uploader: currentUser.name, date: dateStr, status: 'pending', fileUrl: null });
+  saveFiles(files);
+  saveNextId(nextId + 1);
+ 
+  stCloseUpload();
+  stShowToast();
+  stRenderAllGrids();
+  if (document.getElementById('st-panel-mine').style.display !== 'none') {
+    stRenderMyUploads();
+  }
+}
+ 
+function stShowToast() {
+  const t = document.getElementById('st-toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ══════════════════════════════
+   ✅ SESSION RESTORE ON RELOAD
+══════════════════════════════ */
+(function restoreSession() {
+  try {
+    const saved = sessionStorage.getItem('sigce_user');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      if (currentUser.role === 'student') {
+        showStudentApp();
+      }
+      // admin session is handled by admin.html redirect
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

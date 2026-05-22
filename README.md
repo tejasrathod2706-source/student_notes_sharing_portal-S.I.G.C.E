@@ -97,7 +97,7 @@ student_notes_sharing_portal/
 
 **Tejas Rathod**
 - 🎓 CSE (AI/ML) Student at SIGCE
-- 💼 [LinkedIn](https://www.linkedin.com/in/tejas-rathod)
+- 💼 [LinkedIn](https://www.linkedin.com/in/tejas-rathod-95abb2305/)
 - 🐙 [GitHub](https://github.com/tejasrathod2706-source)
 - 📧 tejasrathod2706@gmail.com
 

@@ -87,12 +87,6 @@ student_notes_sharing_portal/
 
 ---
 
-## 📸 Screenshots
-
-> *Coming soon — feel free to add screenshots of the portal UI here!*
-
----
-
 ## 🙋 Author
 
 **Tejas Rathod**
